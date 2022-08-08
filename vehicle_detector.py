@@ -17,8 +17,6 @@ stream_url = 'https://www.youtube.com/watch?v=1EiC9bvVGnk'
 
 yolov5_model = torch.hub.load('ultralytics/yolov5', 'yolov5l6')
 
-tz = pytz.timezone('UTC')
-
 
 def get_yt_dl_url(url):
 
@@ -52,7 +50,7 @@ def grab_frame(yt_dl_url):
                       vcodec='rawvideo')
               .run(capture_stdout=True))
 
-    timestamp = datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = datetime.now(pytz.timezone('UTC'))
 
     probe = ffmpeg.probe(yt_dl_url)
     video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
@@ -93,7 +91,7 @@ def detect_objects(model, img, classes=(2, 3, 5, 7), conf=0.5, iou=0.45):
 def save_detections(db_engine, detections, timestamp, table_name='DetectedObjects'):
 
     detections_dict = detections['name'].value_counts().to_dict()
-    detections_dict['date'] = timestamp
+    detections_dict['date'] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
     metadata = MetaData(db_engine)
     tb = Table(table_name, metadata, autoload=True)
@@ -114,7 +112,7 @@ def main():
 
         save_detections(engine, detections, timestamp)
 
-        time.sleep(30.0 - (timestamp % 30.0))
+        time.sleep(30.0 - (timestamp.second % 30.0))
 
 
 if __name__ == '__main__':
