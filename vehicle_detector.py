@@ -84,6 +84,7 @@ def detect_objects(model, img, classes=(2, 3, 5, 7), conf=0.5, iou=0.45):
     model.classes = list(classes)  # car, motorcycle, bus, truck
 
     results = model(img, size=img.shape[1])
+    results.print()
 
     return results.render()[0], results.pandas().xyxy[0]
 
@@ -118,4 +119,3 @@ def main():
 if __name__ == '__main__':
 
     main()
-
