@@ -11,6 +11,10 @@ from sqlalchemy import create_engine
 import os
 app = Flask(__name__)
 
+IMG_FOLDER = os.path.join('static', 'IMG')
+
+app.config['UPLOAD_FOLDER'] = IMG_FOLDER
+
 # load data
 engine = create_engine('sqlite:///data/DetectedObjects.db')
 
@@ -19,6 +23,8 @@ engine = create_engine('sqlite:///data/DetectedObjects.db')
 @app.route('/')
 @app.route('/index')
 def index():
+    example = os.path.join(IMG_FOLDER, 'most_recent_detection.jpg')
+
     # create visuals
     detected_objects = pd.read_sql_table('DetectedObjects', engine).set_index('id')
     detected_objects['date'] = pd.to_datetime(detected_objects['date'])
@@ -80,7 +86,7 @@ def index():
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
 
     # render web page with plotly graphs
-    return render_template('master.html', ids=ids, graphJSON=graphJSON)
+    return render_template('master.html', ids=ids, graphJSON=graphJSON,  user_image=example)
 
 
 def main():
