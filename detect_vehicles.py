@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import os
 
 import torch
 import ffmpeg
@@ -109,7 +110,7 @@ def main():
 
         img_w_det, detections = detect_objects(yolov5_model, img)
 
-        save_image(img_w_det, 'most_recent_detection.jpg')
+        save_image(img_w_det, os.path.join('app', 'static', 'IMG', 'most_recent_detection.jpg'))
 
         save_detections(engine, detections, timestamp)
 
