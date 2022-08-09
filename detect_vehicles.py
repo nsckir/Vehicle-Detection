@@ -11,11 +11,11 @@ from matplotlib import pyplot as plt
 from sqlalchemy import MetaData, Table
 from sqlalchemy import create_engine
 
-engine = create_engine(''.join(['sqlite:///', 'DetectedObjects.db']))
+engine = create_engine(''.join(['sqlite:///', 'data/DetectedObjects.db']))
 
 stream_url = 'https://www.youtube.com/watch?v=1EiC9bvVGnk'
 
-yolov5_model = torch.hub.load('ultralytics/yolov5', 'yolov5l6')
+yolov5_model = torch.hub.load('ultralytics/yolov5', 'yolov5m6')
 
 
 def get_yt_dl_url(url):
