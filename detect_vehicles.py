@@ -20,6 +20,14 @@ yolov5_model = torch.hub.load('ultralytics/yolov5', 'yolov5m6')
 
 
 def get_yt_dl_url(url):
+    """Returns the actual video url of a YouTube video.
+
+    Args:
+        url: (string) url of a Youtube page.
+
+    Returns:
+        url of the video
+    """
 
     ydl = youtube_dl.YoutubeDL({'quiet': True})
 
@@ -39,6 +47,17 @@ def get_yt_dl_url(url):
 
 
 def grab_frame(yt_dl_url):
+    """Returns current frame and timestamp from the YouTube live stream.
+
+    Args:
+        yt_dl_url: (string) download url of a YouTube video.
+
+    Returns:
+        img: (numpy.array) current video frame
+        timestamp: (datetime.datetime) current timestamp
+
+    Raises:
+    """
 
     out, _ = (ffmpeg
               .input(yt_dl_url)
@@ -64,6 +83,13 @@ def grab_frame(yt_dl_url):
 
 
 def show_image(img):
+    """Shows image
+
+    Args:
+        img: (numpy.array) image
+
+    Returns:
+    """
 
     fig_width = float(img.shape[1] / 100)
     fig_height = float(img.shape[0] / 100)
@@ -73,12 +99,34 @@ def show_image(img):
 
 
 def save_image(img, filename):
+    """Saves the image
+
+    Args:
+        img: (numpy.array) image
+        filename: (string) path where to save the image
+
+    Returns:
+
+    """
 
     im = Image.fromarray(img)
     im.save(filename)
 
 
 def detect_objects(model, img, classes=(2, 3, 5, 7), conf=0.5, iou=0.45):
+    """Detects objects im the image
+
+    Args:
+        model: PyTorch model
+        img: (numpy.array) image
+        classes: (list) subset of 80 object classes to detect
+        conf: (float) confidence threshold (0-1)
+        iou: (float) NMS IoU threshold (0-1)
+
+    Returns:
+        img: (numpy.array) image with detected objects
+        results_df: (pandas.Dataframe) dataframe with detected objects
+    """
 
     model.conf = conf  # confidence threshold (0-1)
     model.iou = iou  # NMS IoU threshold (0-1)
@@ -87,10 +135,24 @@ def detect_objects(model, img, classes=(2, 3, 5, 7), conf=0.5, iou=0.45):
     results = model(img, size=img.shape[1])
     results.print()
 
-    return results.render()[0], results.pandas().xyxy[0]
+    img_w_detections = results.render()[0]
+    results_df = results.pandas().xyxy[0]
+
+    return img_w_detections, results_df
 
 
 def save_detections(db_engine, detections, timestamp, table_name='DetectedObjects'):
+    """Saves detections to the database
+
+    Args:
+        db_engine: (sqlalchemy.Engine) database engine
+        detections: (pandas.Dataframe) dataframe with detected objects
+        timestamp: (datetime.datetime) timestamp of the detection
+        table_name: (string) name of the table where to save the detections
+
+    Returns:
+
+    """
 
     detections_dict = detections['name'].value_counts().to_dict()
     detections_dict['date'] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
@@ -102,6 +164,12 @@ def save_detections(db_engine, detections, timestamp, table_name='DetectedObject
 
 
 def main():
+    """Gets video stream url, grabs the current frame, detects vehicles,
+    saves image, saves results to DB
+
+    Returns:
+
+    """
 
     while True:
         yt_dl_url = get_yt_dl_url(stream_url)
