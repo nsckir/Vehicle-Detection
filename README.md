@@ -9,8 +9,8 @@
 ## Installation 
 
 Apart from the Anaconda distribution of Python following libraries have been used: `plotly`, `pytorch`, `youtube-dl`,
-`ffmpeg-python`, `flask`.
-The code should run with no issues using `python>=3.8`. For more information check the
+`ffmpeg-python`, `flask`, `sql-alchemy`.
+The code should run with no issues using `python>=3.8`. For more information about the requirements check the
 [YOLOv5 repo](https://github.com/ultralytics/yolov5/).
 
 ## Project Motivation
