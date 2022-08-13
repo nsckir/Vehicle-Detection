@@ -1,9 +1,11 @@
 import json
+import pytz
+from datetime import datetime
 
 import pandas as pd
 import plotly
 from flask import Flask
-from flask import render_template, request
+from flask import render_template
 from plotly.graph_objs import Pie
 from plotly.graph_objs import Bar
 
@@ -19,6 +21,10 @@ app.config['UPLOAD_FOLDER'] = IMG_FOLDER
 engine = create_engine('sqlite:///data/DetectedObjects.db')
 
 
+def time_to_tz_naive(t, tz_in, tz_out):
+    return tz_in.localize(datetime.combine(datetime.today(), t)).astimezone(tz_out).time()
+
+
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
@@ -30,11 +36,19 @@ def index():
     detected_objects['date'] = pd.to_datetime(detected_objects['date'])
     object_types = ['car', 'motorcycle', 'bus', 'truck']
     detected_objects['total'] = detected_objects[object_types].sum(axis=1)
-    num_obj_by_hour = detected_objects.groupby(detected_objects['date'].dt.hour).agg({'total': ['mean', 'std']})
+    # Group by time interval
+    num_obj_by_hour = (detected_objects.groupby(detected_objects['date'].dt.floor('30Min').dt.time)
+                                       .agg({'total': ['mean', 'std']}))
+
     num_obj_by_hour.columns = num_obj_by_hour.columns.droplevel()
     num_obj_by_hour.reset_index(inplace=True)
-    num_obj_by_hour = num_obj_by_hour.rename(columns={'date': 'hour'})
-    num_obj_by_hour['hour'] = (num_obj_by_hour['hour'] - 6) % 24
+    num_obj_by_hour = num_obj_by_hour.rename(columns={'date': 'time'})
+
+    # Convert to timezone of the cam location. Hardcoded for now since the stream url is also hardcoded
+    tz_in = pytz.utc
+    tz_out = pytz.timezone('US/Mountain')
+    num_obj_by_hour['time'] = num_obj_by_hour['time'].apply(lambda x: time_to_tz_naive(x, tz_in, tz_out))
+    num_obj_by_hour.sort_values('time', inplace=True)
 
     obj_by_type = detected_objects[object_types].sum().reset_index()
     obj_by_type.columns = ['vehicle_type', 'count']
@@ -44,12 +58,13 @@ def index():
         {
             'data': [
                 Bar(
-                    x=num_obj_by_hour['hour'],
+                    x=num_obj_by_hour['time'],
                     y=num_obj_by_hour['mean'],
                     error_y=dict(
                         type='data',  # value of error bar given in data coordinates
                         array=num_obj_by_hour['std'],
-                        visible=True)
+                        thickness=1,
+                        width=2,)
                 )
             ],
 
@@ -59,8 +74,8 @@ def index():
                     'title': "Average number of vehicles in the image"
                 },
                 'xaxis': {
-                    'title': "Hour",
-                    'range': [-0.5, 23.5]
+                    'title': 'Local Time',
+
                 },
 
             }
