@@ -63,8 +63,6 @@ Of all detected vehicles around 80% are cars and 17.5% trucks and pickups
 
 <img src="images/vehicle_types.png" alt="drawing" width="50%"/>
 
-The web app can be accessed [here](http://nsckir.ddns.net:3001).
-
 ### Conclusion/Reflection<a name="conclusion"></a>
 
 The YOLOv5 model performs very consistently, detecting even those cars which appear
